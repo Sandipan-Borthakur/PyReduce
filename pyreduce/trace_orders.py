@@ -586,7 +586,7 @@ def mark_orders(
             clusters[x[i], y[i]] = i + 1
         clusters[clusters == 0] = np.ma.masked
 
-        plt.imshow(clusters, origin="lower", cmap="prism")
+        plt.imshow(clusters.data, origin="lower", cmap="prism") # sb: changed clusters to clusters.data. Otherwise nothing was plotted
         plt.show()
 
     # Merge clusters, if there are even any possible mergers left
