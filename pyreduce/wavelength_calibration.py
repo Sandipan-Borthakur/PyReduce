@@ -96,29 +96,31 @@ class AlignmentPlot:
 
     def on_click(self, event):
         """On click offset the reference by the distance between click positions"""
-        if event.ydata is None:
-            return
-        order = int(np.floor(event.ydata))
-        spec = "ref" if (event.ydata - order) > 0.5 else "obs"  # if True then reference
-        x = event.xdata
-        print("Order: %i, Spectrum: %s, x: %g" % (order, "ref" if spec else "obs", x))
+        toolbar = plt.get_current_fig_manager().toolbar
+        if toolbar.mode=='':                          #sb : added this if condition to prevent accepting clicks when dragging and zooming interactively
+            if event.ydata is None:
+                return
+            order = int(np.floor(event.ydata))
+            spec = "ref" if (event.ydata - order) > 0.5 else "obs"  # if True then reference
+            x = event.xdata
+            print("Order: %i, Spectrum: %s, x: %g" % (order, "ref" if spec else "obs", x))
 
-        # on every second click
-        if self.first:
-            self.first = False
-            self.order_first = order
-            self.spec_first = spec
-            self.x_first = x
-        else:
-            # Clicked different spectra
-            if spec != self.spec_first:
-                self.first = True
-                direction = -1 if spec == "ref" else 1
-                offset_orders = int(order - self.order_first) * direction
-                offset_x = int(x - self.x_first) * direction
-                self.offset[0] -= offset_orders - 1
-                self.offset[1] -= offset_x
-                self.make_ref_image()
+            # on every second click
+            if self.first:
+                self.first = False
+                self.order_first = order
+                self.spec_first = spec
+                self.x_first = x
+            else:
+                # Clicked different spectra
+                if spec != self.spec_first:
+                    self.first = True
+                    direction = -1 if spec == "ref" else 1
+                    offset_orders = int(order - self.order_first) * direction
+                    offset_x = int(x - self.x_first) * direction
+                    self.offset[0] -= offset_orders - 1
+                    self.offset[1] -= offset_x
+                    self.make_ref_image()
 
 
 class LineAtlas:
