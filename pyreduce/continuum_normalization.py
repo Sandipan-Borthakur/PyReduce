@@ -48,6 +48,9 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
     spec, wave, cont, sigm : array[nord, ncol]
         spliced spectrum
     """
+    # spec = spec[:-1]
+    # cont = cont[:-1]
+    # sigm = sigm[:-1]
     nord, _ = spec.shape  # Number of sp. orders, Order length in pixels
 
     if cont is None:
@@ -63,11 +66,12 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
     wave = np.ma.masked_array(np.ma.getdata(wave), mask=mask)
     cont = np.ma.masked_array(np.ma.getdata(cont), mask=mask)
     sigm = np.ma.masked_array(np.ma.getdata(sigm), mask=mask)
-
-    if scaling:
-        # Scale everything to roughly the same size, around spec/blaze = 1
-        scale = np.ma.median(spec / cont, axis=1)
-        cont *= scale[:, None]
+    
+    #sb: removed scaling, because not sure what the use is. Better results without it.
+    # if scaling:
+    #     # Scale everything to roughly the same size, around spec/blaze = 1
+    #     scale = np.ma.median(spec / cont, axis=1)
+    #     cont *= scale[:, None]
 
     if plot:  # pragma: no cover
         plt.subplot(411)
@@ -96,6 +100,7 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
         # Get data for current order
         # Note that those are just references to parts of the original data
         # any changes will also affect spec, wave, cont, and sigm
+
         s0, s1 = spec[iord0], spec[iord1]
         w0, w1 = wave[iord0], wave[iord1]
         c0, c1 = cont[iord0], cont[iord1]
@@ -104,7 +109,13 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
         # Calculate Overlap
         i0 = np.ma.where((w0 >= np.ma.min(w1)) & (w0 <= np.ma.max(w1)))
         i1 = np.ma.where((w1 >= np.ma.min(w0)) & (w1 <= np.ma.max(w0)))
-
+        
+        #sb: added scaling to match the spectral orders one after the other.
+        if scaling:
+            scl = np.mean(s0[i0])/np.mean(s1[i1])
+            s1 = s1*scl
+            c1 = c1*scl
+            u1 = u1*scl
         # Orders overlap
         if i0[0].size > 0 and i1[0].size > 0:
             # Interpolate the overlapping region onto the wavelength grid of the other order
