@@ -573,7 +573,7 @@ def plot2d(x, y, z, coeff, title=None):
     )
     Z = np.polynomial.polynomial.polyval2d(X, Y, coeff)
     fig = plt.figure()
-    ax = fig.gca(projection="3d")
+    ax = fig.add_subplot(111, projection='3d') #sb : changed from fig.gca(projection='3d')
     ax.plot_surface(X, Y, Z, rstride=1, cstride=1, alpha=0.2)
     ax.scatter(x, y, z, c="r", s=50)
     plt.xlabel("X")
