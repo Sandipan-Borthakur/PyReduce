@@ -48,9 +48,7 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
     spec, wave, cont, sigm : array[nord, ncol]
         spliced spectrum
     """
-    # spec = spec[:-1]
-    # cont = cont[:-1]
-    # sigm = sigm[:-1]
+
     nord, _ = spec.shape  # Number of sp. orders, Order length in pixels
 
     if cont is None:
@@ -112,10 +110,11 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
         
         #sb: added scaling to match the spectral orders one after the other.
         if scaling:
-            scl = np.mean(s0[i0])/np.mean(s1[i1])
+            scl = np.ma.mean(s0[i0])/np.ma.mean(s1[i1])
             s1 = s1*scl
             c1 = c1*scl
             u1 = u1*scl
+
         # Orders overlap
         if i0[0].size > 0 and i1[0].size > 0:
             # Interpolate the overlapping region onto the wavelength grid of the other order
@@ -142,9 +141,15 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
             )
             c1[i1] = np.ma.average([c1[i1], tmpB1], axis=0, weights=wgt1)
             u1[i1] = c1[i1] * utmp ** -0.5
+
         else:  # pragma: no cover
             # TODO: Orders dont overlap
             continue
+
+        spec[iord0], spec[iord1] = s0, s1
+        wave[iord0], wave[iord1] = w0, w1
+        cont[iord0], cont[iord1] = c0, c1
+        sigm[iord0], sigm[iord1] = u0, u1
 
     if plot:  # pragma: no cover
         plt.subplot(413)
@@ -204,7 +209,7 @@ def continuum_normalize(
     wave,
     cont,
     sigm,
-    iterations=10,
+    iterations=15,
     smooth_initial=1e5,
     smooth_final=5e6,
     scale_vert=1,
