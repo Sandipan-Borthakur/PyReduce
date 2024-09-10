@@ -1807,7 +1807,15 @@ class ContinuumNormalization(Step):
             column ranges for each spectra
         """
         wave = freq_comb
-        heads, specs, sigmas, _, columns = science
+
+        #sb: If "science" is in the step, science object has 5 components, the 4th one stores information
+        #    of slit functions. When "science" step is not used, the loading function of ScienceExtraction class
+        #    doesn't load the slit functions, thus having 4 components of science object below. We don't need
+        #    slit functions here anyway.
+        if len(science)==5:
+            heads, specs, sigmas, _, columns = science
+        else:
+            heads, specs, sigmas, columns = science
         norm, blaze = norm_flat
 
         logger.info("Continuum normalization")
@@ -2172,7 +2180,14 @@ class Reducer:
 
         if steps == "all":
             steps = list(self.step_order.keys())
-        steps = list(steps)
+
+        # sb: If only one step is mentioned in steps and no comma is added infront of the step, the steps variable becomes
+        # a string instead of a tuple and applying list(steps) divides the string into individual characters to make the list
+
+        if isinstance(steps,str):
+            steps = [steps]
+        else:
+            steps = list(steps)
 
         if self.skip_existing and "finalize" in steps:
             module = self.modules["finalize"](
