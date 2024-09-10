@@ -1764,7 +1764,7 @@ class ScienceExtraction(CalibrationStep, ExtractionStep):
             sigmas.append(science["sig"])
             columns.append(science["columns"])
 
-        return heads, specs, sigmas, columns
+        return heads, specs, sigmas, None, columns
 
 
 class ContinuumNormalization(Step):
@@ -1812,10 +1812,7 @@ class ContinuumNormalization(Step):
         #    of slit functions. When "science" step is not used, the loading function of ScienceExtraction class
         #    doesn't load the slit functions, thus having 4 components of science object below. We don't need
         #    slit functions here anyway.
-        if len(science)==5:
-            heads, specs, sigmas, _, columns = science
-        else:
-            heads, specs, sigmas, columns = science
+        heads, specs, sigmas, _, columns = science
         norm, blaze = norm_flat
 
         logger.info("Continuum normalization")
