@@ -993,7 +993,7 @@ class WavelengthCalibrationMaster(CalibrationStep, ExtractionStep):
 
     def __init__(self, *args, **config):
         super().__init__(*args, **config)
-        self._dependsOn += ["norm_flat", "curvature"]
+        self._dependsOn += ["norm_flat", "curvature","bias"]
 
     @property
     def savefile(self):
@@ -1808,10 +1808,6 @@ class ContinuumNormalization(Step):
         """
         wave = freq_comb
 
-        #sb: If "science" is in the step, science object has 5 components, the 4th one stores information
-        #    of slit functions. When "science" step is not used, the loading function of ScienceExtraction class
-        #    doesn't load the slit functions, thus having 4 components of science object below. We don't need
-        #    slit functions here anyway.
         heads, specs, sigmas, _, columns = science
         norm, blaze = norm_flat
 
