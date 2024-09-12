@@ -310,7 +310,7 @@ class CalibrationStep(Step):
         #:{'divide', 'none'}: how to apply the normalized flat field
         self.norm_scaling = config["norm_scaling"]
 
-    def calibrate(self, files, mask, bias=None, norm_flat=None):
+    def calibrate(self, files, mask, bias=None, norm_flat=None,combine_type='mean'):
         bias, bhead = bias if bias is not None else (None, None)
         norm, blaze = norm_flat if norm_flat is not None else (None, None)
         orig, thead = combine_calibrate(
@@ -325,6 +325,7 @@ class CalibrationStep(Step):
             norm_scaling=self.norm_scaling,
             plot=self.plot,
             plot_title=self.plot_title,
+            combine_type=combine_type
         )
 
         return orig, thead
@@ -657,7 +658,7 @@ class Flat(CalibrationStep):
         """
         logger.info("Flat files: %s", files)
         # This is just the calibration of images
-        flat, fhead = self.calibrate(files, mask, bias, None)
+        flat, fhead = self.calibrate(files, mask, bias, None,combine_type='median')
         # And then save it
         self.save(flat.data, fhead)
         return flat, fhead
@@ -743,7 +744,7 @@ class OrderTracing(CalibrationStep):
 
         logger.info("Order tracing files: %s", files)
 
-        order_img, ohead = self.calibrate(files, mask, bias, None)
+        order_img, ohead = self.calibrate(files, mask, bias, None,combine_type='median')
 
         orders, column_range = mark_orders(
             order_img,
@@ -819,7 +820,7 @@ class BackgroundScatter(CalibrationStep):
     def run(self, files, mask, bias, orders):
         logger.info("Background scatter files: %s", files)
 
-        scatter_img, shead = self.calibrate(files, mask, bias)
+        scatter_img, shead = self.calibrate(files, mask, bias,combine_type='median')
 
         orders, column_range = orders
         scatter = estimate_background_scatter(
@@ -1030,7 +1031,7 @@ class WavelengthCalibrationMaster(CalibrationStep, ExtractionStep):
             raise FileNotFoundError("No files found for wavelength calibration")
         logger.info("Wavelength calibration files: %s", files)
         # Load wavecal image
-        orig, thead = self.calibrate(files, mask, bias, norm_flat)
+        orig, thead = self.calibrate(files, mask, bias, norm_flat,combine_type='mean')
         # Extract wavecal spectrum
         thar, _, _, _ = self.extract(orig, thead, orders, curvature)
         self.save(thar, thead)
@@ -1502,7 +1503,7 @@ class SlitCurvatureDetermination(CalibrationStep, ExtractionStep):
 
         logger.info("Slit curvature files: %s", files)
 
-        orig, thead = self.calibrate(files, mask, bias, None)
+        orig, thead = self.calibrate(files, mask, bias, None,combine_type='mean')
         extracted, _, _, _ = self.extract(orig, thead, orders, None)
 
         orders, column_range = orders
@@ -1688,7 +1689,7 @@ class ScienceExtraction(CalibrationStep, ExtractionStep):
         for fname in tqdm(files, desc="Files"):
             logger.info("Science file: %s", fname)
             # Calibrate the input image
-            im, head = self.calibrate([fname], mask, bias, norm_flat)
+            im, head = self.calibrate([fname], mask, bias, norm_flat,combine_type='mean')
             # Optimally extract science spectrum
             spec, sigma, slitfu, cr = self.extract(im, head, orders, curvature, scatter=scatter)
 
