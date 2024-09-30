@@ -948,7 +948,7 @@ def middle(
     f : Callable
         Function to fit
     filter : int
-        Smoothing parameter of the optimal filter (or polynomial degree of poly is True)
+        Smoothing parameter of the optimal filter (or polynomial degree of poly is True)  (sb: There is no filter parameter!)
     iter : int
         maximum number of iterations [def: 40]
     eps : float
