@@ -12,6 +12,7 @@ import corner
 import emcee
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL.ImageChops import offset
 from astropy.io import fits
 from numpy.polynomial.polynomial import Polynomial, polyval2d
 from scipy import signal
@@ -401,7 +402,8 @@ class WavelengthCalibration:
         """
         min_order = int(np.min(lines["order"]))
         max_order = int(np.max(lines["order"]))
-        img = np.zeros((max_order - min_order + 1, self.ncol))
+        #sb img
+        img = np.zeros((max_order + 1, self.ncol))
         for line in lines:
             if line["order"] < 0:
                 continue
@@ -409,7 +411,7 @@ class WavelengthCalibration:
                 continue
             first = int(max(line["xfirst"], 0))
             last = int(min(line["xlast"], self.ncol))
-            img[int(line["order"]) - min_order, first:last] = line[
+            img[int(line["order"]), first:last] = line[
                 "height"
             ] * signal.windows.gaussian(last - first, line["width"])
         return img
@@ -460,7 +462,7 @@ class WavelengthCalibration:
         lines["xfirst"][select] += offset[1]
         lines["xlast"][select] += offset[1]
         lines["posm"][select] += offset[1]
-        lines["order"][select] += offset[0]
+        lines["order"][select] += offset[0] #sb : lines["order"][select] += offset[0] changed to substraction. Not sure why it works. Check!!
         return lines
 
     def align(self, obs, lines):
@@ -491,6 +493,7 @@ class WavelengthCalibration:
             img = self.create_image_from_lines(lines)
 
             # Crop the image to speed up cross correlation
+
             if self.correlate_cols != 0:
                 _slice = slice((self.ncol - self.correlate_cols) // 2, 
                                (self.ncol + self.correlate_cols) // 2 + 1)
@@ -514,8 +517,8 @@ class WavelengthCalibration:
                     plt.title(self.plot_title)
                 plt.show()
 
-            offset_order = offset_order - ccimg.shape[0] / 2 + 1
-            offset_x = offset_x - ccimg.shape[1] / 2 + 1
+            offset_order = offset_order - ccimg.shape[0] // 2 + 1
+            offset_x = offset_x - ccimg.shape[1] // 2 + 1
             offset = [int(offset_order), int(offset_x)]
 
             # apply offset
@@ -900,7 +903,7 @@ class WavelengthCalibration:
         threshold : int, optional
             difference threshold between line positions in m/s, until which a line is considered identified (default: 1)
         plot : bool, optional
-            wether to plot the new lines
+            whether to plot the new lines
 
         Returns
         -------
@@ -947,7 +950,7 @@ class WavelengthCalibration:
                 )
 
                 for i, p in enumerate(peaks_atlas):
-                    # Look for an existing line in the vicinityq
+                    # Look for an existing line in the vicinity
                     wpeak = wave_atlas[p]
                     diff = np.abs(line["wll"] - wpeak) / wpeak * speed_of_light
                     if np.any(diff < threshold_of_peak_closeness):
@@ -1824,7 +1827,7 @@ class WavelengthCalibrationInitialize(WavelengthCalibration):
         spectrum = self.normalize(spectrum)
         cutoff = self.get_cutoff(spectrum)
 
-        # TODO: make this use another function, and pass the hight as a parameter
+        # TODO: make this use another function, and pass the height as a parameter
         scopy = np.copy(spectrum)
         if cutoff is not None:
             scopy[scopy < cutoff] = 0
