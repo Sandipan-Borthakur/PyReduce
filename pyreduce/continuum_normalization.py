@@ -64,12 +64,13 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
     wave = np.ma.masked_array(np.ma.getdata(wave), mask=mask)
     cont = np.ma.masked_array(np.ma.getdata(cont), mask=mask)
     sigm = np.ma.masked_array(np.ma.getdata(sigm), mask=mask)
-    
+
     #sb: removed scaling, because not sure what the use is. Better results without it.
     # if scaling:
     #     # Scale everything to roughly the same size, around spec/blaze = 1
     #     scale = np.ma.median(spec / cont, axis=1)
     #     cont *= scale[:, None]
+
 
     if plot:  # pragma: no cover
         plt.subplot(411)
@@ -165,7 +166,7 @@ def splice_orders(spec, wave, cont, sigm, scaling=True, plot=False, plot_title=N
         plt.ylim((0, np.ma.median(sigm[i] / cont[i]) * 2))
         plt.show()
 
-    return spec, wave, cont, sigm
+    return spec/cont, wave, cont/cont, sigm/cont
 
 
 class Plot_Normalization:  # pragma: no cover
@@ -209,9 +210,9 @@ def continuum_normalize(
     wave,
     cont,
     sigm,
-    iterations=15,
+    iterations=6,
     smooth_initial=1e5,
-    smooth_final=5e6,
+    smooth_final=5e7,
     scale_vert=1,
     plot=True,
     plot_title=None,
@@ -261,6 +262,19 @@ def continuum_normalize(
     for i in range(nord):
         b[i, mask[i]] = util.middle(b[i, mask[i]], 1)
     cont = b
+
+    # sb: Testing to use median filtering with interpolation to remove noise
+    b = np.clip(spec,0,None)
+    mask = ~np.ma.getmaskarray(b)
+    for i in range(nord):
+        b[i, mask[i]] = util.middle(b[i, mask[i]], 1)
+
+    for i in range(spec.shape[0]):
+        plt.plot(wave[i],spec[i],'k')
+        ind = np.where(np.abs(spec[i]/b[i]-1)<=0.2)[0]
+        spec[i] = np.interp(wave[i],wave[i][ind],spec[i][ind])
+        plt.plot(wave[i],spec[i])
+    plt.show()
 
     # Create new equispaced wavelength grid
     tmp = wave.compressed()
