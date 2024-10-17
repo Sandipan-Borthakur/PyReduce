@@ -229,6 +229,13 @@ class LineList:
     @classmethod
     def load(cls, filename):
         data = np.load(filename, allow_pickle=True)
+
+        # sb: use data["cs_lines"] to list out all the keys
+        # Keys are : [(('wlc', 'WLC'), '>f8'), (('wll', 'WLL'), '>f8'),
+        # (('posc', 'POSC'), '>f8'), (('posm', 'POSM'), '>f8'), (('xfirst', 'XFIRST'), '>i2'),
+        # (('xlast', 'XLAST'), '>i2'), (('approx', 'APPROX'), 'O'), (('width', 'WIDTH'), '>f8'),
+        # (('height', 'HEIGHT'), '>f8'), (('order', 'ORDER'), '>i2'), ('flag', '?')]
+
         linelist = cls(data["cs_lines"])
         return linelist
 
@@ -1185,7 +1192,7 @@ class WavelengthCalibration:
 
     def plot_results(self, wave_img, obs):
         plt.subplot(211)
-        title = "Wavelength solution with Wavelength calibration spectrum\nOrders are in different colours"
+        title = "Wavelength solution with Wavelength calibration spectrum\nOrders are in different colours (I am here)"
         if self.plot_title is not None:
             title = f"{self.plot_title}\n{title}"
         plt.title(title)
